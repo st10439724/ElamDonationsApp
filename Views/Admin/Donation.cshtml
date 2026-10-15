@@ -1,0 +1,72 @@
+﻿@model DonationDetailViewModel
+@{
+    ViewData["Title"] = "Review donation";
+}
+
+<p class="mb-2"><a asp-action="Donor" asp-route-id="@Model.DonorId">&larr; Back to @Model.DonorName</a></p>
+<h1 class="page-title mb-3">Review donation</h1>
+
+<div class="panel mb-3">
+    <dl class="row mb-0">
+        <dt class="col-sm-4">Donor</dt>
+        <dd class="col-sm-8">@Model.DonorName <span class="text-muted small">(@Model.DonorPhone, @Model.DonorEmail)</span></dd>
+
+        <dt class="col-sm-4">Donated</dt>
+        <dd class="col-sm-8">@Model.ItemType</dd>
+
+        @if (Model.IsMoney)
+        {
+            <dt class="col-sm-4">Amount</dt>
+            <dd class="col-sm-8"><strong>@Rand.Format(Model.Amount)</strong> &middot; Reference <code>@Model.Reference</code></dd>
+        }
+        else
+        {
+            <dt class="col-sm-4">City</dt>
+            <dd class="col-sm-8">@Model.City</dd>
+        }
+
+        <dt class="col-sm-4">Description</dt>
+        <dd class="col-sm-8 text-break">@(string.IsNullOrWhiteSpace(Model.Description) ? "-" : Model.Description)</dd>
+
+        <dt class="col-sm-4">Submitted</dt>
+        <dd class="col-sm-8">@SaTime.Format(Model.DateSubmitted)</dd>
+
+        <dt class="col-sm-4">Status</dt>
+        <dd class="col-sm-8">
+            <span class="chip chip-@(Model.Status == DonationStatus.Received ? "received" : "submitted")">@Model.Status</span>
+            @if (Model.DateVerified is not null)
+            {
+                <span class="small text-muted ms-2">verified @SaTime.Format(Model.DateVerified.Value)</span>
+            }
+        </dd>
+    </dl>
+</div>
+
+@if (Model.IsMoney)
+{
+    <div class="contact-box mb-3">
+        <strong>Proof of payment</strong>
+        @if (!string.IsNullOrEmpty(Model.ProofFileName))
+        {
+            <div>&#10003; Proof of payment attached: <strong>@Model.ProofFileName</strong></div>
+            <div class="small"><a asp-action="Proof" asp-route-id="@Model.Id" target="_blank" rel="noopener">View the PDF</a> (optional)</div>
+        }
+        else
+        {
+            <div class="text-danger">No proof of payment was uploaded.</div>
+        }
+    </div>
+}
+
+@if (Model.Status == DonationStatus.Submitted)
+{
+    <form asp-action="Verify" asp-route-id="@Model.Id" method="post">
+        <button type="submit" class="btn btn-brand btn-lg">
+            @(Model.IsMoney ? "Verify: payment received" : "Verify: items received")
+        </button>
+    </form>
+}
+else
+{
+    <p class="text-muted mb-0">This donation has been verified.</p>
+}

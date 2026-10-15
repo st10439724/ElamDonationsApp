@@ -1,0 +1,45 @@
+@model List<Webinar>
+@{
+    ViewData["Title"] = "Career day webinars";
+}
+
+<h1 class="page-title mb-1">Career day webinars</h1>
+<p class="lead text-muted">Open to everyone. No account needed. Pick a session and leave your name and contact number.</p>
+
+@if (Model.Count == 0)
+{
+    <div class="panel text-center text-muted">No webinars are scheduled right now. Please check back soon.</div>
+}
+
+<div class="d-flex flex-column gap-3">
+    @foreach (var w in Model)
+    {
+        <article class="webinar-card">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div>
+                    <h2 class="webinar-title">@w.Topic</h2>
+                    <div class="text-muted">@w.StartTime.ToString("dddd, d MMMM yyyy 'at' HH:mm") &middot; Speaker: @w.Speaker</div>
+                </div>
+                <button type="button" class="btn btn-brand" data-bs-toggle="collapse" data-bs-target="#rsvp-@w.Id"
+                        aria-expanded="false" aria-controls="rsvp-@w.Id">Register</button>
+            </div>
+
+            <div class="collapse" id="rsvp-@w.Id">
+                <form asp-action="Rsvp" method="post" class="row g-3 align-items-end pt-3 mt-3 border-top">
+                    <input type="hidden" name="WebinarId" value="@w.Id" />
+                    <div class="col-md-5">
+                        <label for="name-@w.Id" class="form-label fw-semibold">Name</label>
+                        <input id="name-@w.Id" name="AttendeeName" class="form-control" maxlength="100" required />
+                    </div>
+                    <div class="col-md-4">
+                        <label for="num-@w.Id" class="form-label fw-semibold">Contact number</label>
+                        <input id="num-@w.Id" name="ContactNumber" class="form-control" type="tel" maxlength="20" required />
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-dark w-100">Confirm RSVP</button>
+                    </div>
+                </form>
+            </div>
+        </article>
+    }
+</div>

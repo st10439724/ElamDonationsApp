@@ -1,0 +1,47 @@
+@inject IOptions<NpoOptions> Npo
+@{
+    ViewData["Title"] = "Welcome";
+}
+
+<section class="row align-items-center g-5 py-4">
+    <div class="col-lg-7">
+        <p class="eyebrow">Your little input can make a difference</p>
+        <h1 class="hero-title">Give something to those who have nothing.</h1>
+        <p class="slogan">@Npo.Value.Slogan</p>
+        <p class="lead text-muted">
+            Elam Igugu Leli supports underprivileged children and young people in PE, Alice,
+            East London and Johannesburg. Sign up to donate clothes, non-perishable food or money,
+            or join a career day webinar.
+        </p>
+        <div class="d-flex flex-wrap gap-2">
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <a class="btn btn-brand btn-lg" asp-controller="Home" asp-action="Dashboard">Go to my page</a>
+            }
+            else
+            {
+                <a class="btn btn-brand btn-lg" asp-controller="Account" asp-action="Register">Sign up to donate</a>
+            }
+            <a class="btn btn-outline-secondary btn-lg" asp-controller="Webinars" asp-action="Index">View webinars</a>
+        </div>
+        <p class="mt-4 mb-0"><span class="reg-badge">@Npo.Value.RegistrationNumber</span></p>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="panel">
+            <h2 class="panel-title">How donating works</h2>
+            <ol class="steps">
+                <li><strong>Sign up or sign in</strong><span>A quick account so the NPO knows who you are.</span></li>
+                <li><strong>Tap Donate / Drop Off</strong><span>Say what you plan to give, or choose Money (EFT). Your donation shows as Submitted.</span></li>
+                <li><strong>Hand it over</strong><span>Message @Npo.Value.InstagramHandle on Instagram or call to arrange a drop-off, or pay by EFT with your reference.</span></li>
+                <li><strong>See it marked Received</strong><span>Once an admin confirms your items or payment arrived, the status updates on your page.</span></li>
+            </ol>
+        </div>
+    </div>
+</section>
+
+<section class="row g-3 pb-4">
+    <div class="col-md-4"><div class="info-card"><strong>What we collect</strong><span>Clothes, non-perishable food and money (EFT).</span></div></div>
+    <div class="col-md-4"><div class="info-card"><strong>Where</strong><span>@(string.Join(", ", DonationOptions.Cities))</span></div></div>
+    <div class="col-md-4"><div class="info-card"><strong>Contact</strong><span>@Npo.Value.InstagramHandle, @(string.Join(" / ", Npo.Value.PhoneNumbers))</span><span>@Npo.Value.Email</span></div></div>
+</section>

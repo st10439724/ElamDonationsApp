@@ -1,0 +1,99 @@
+/* Elam Igugu Leli - small theme on top of Bootstrap */
+:root {
+    --green: #2f7d32;
+    --green-dark: #1f5c24;
+    --green-soft: #e8f3e8;
+    --ink: #1b2a1c;
+    --muted: #5b6b5c;
+    --line: #d5e3d5;
+    --paper: #fafcf9;
+}
+
+body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+a { color: var(--green-dark); }
+
+.text-muted { color: var(--muted) !important; }
+
+/* Header */
+.site-header { background: #fff; border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: .75rem; text-decoration: none; color: var(--ink); }
+.brand-mark {
+    width: 36px; height: 36px; border-radius: 10px; background: var(--green); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center; font-weight: 700;
+}
+.brand-name { font-weight: 700; font-size: 1.2rem; }
+.nav-link-plain { color: var(--ink); text-decoration: none; font-weight: 600; padding: .5rem .75rem; }
+.nav-link-plain:hover { text-decoration: underline; }
+.role-pill { padding: .25rem .75rem; border-radius: 999px; font-size: .8rem; font-weight: 700; }
+.role-donor { background: var(--green-soft); color: var(--green-dark); }
+.role-admin { background: var(--ink); color: #fff; }
+.site-footer { border-top: 1px solid var(--line); margin-top: 2rem; }
+
+/* Buttons */
+.btn-brand { background: var(--green); border-color: var(--green); color: #fff; font-weight: 700; }
+.btn-brand:hover, .btn-brand:focus { background: var(--green-dark); border-color: var(--green-dark); color: #fff; }
+.btn-outline-secondary { color: var(--ink); border-color: #bcd3bc; font-weight: 600; }
+.btn-outline-secondary:hover { background: var(--green-soft); color: var(--ink); border-color: #bcd3bc; }
+
+/* Landing page */
+.eyebrow { text-transform: uppercase; letter-spacing: .04em; font-weight: 700; font-size: .85rem; color: var(--green-dark); }
+.hero-title { font-size: clamp(2rem, 5vw, 3.25rem); font-weight: 800; line-height: 1.1; }
+.slogan { font-size: 1.25rem; font-weight: 600; font-style: italic; color: var(--green-dark); }
+.reg-badge {
+    display: inline-block; padding: .35rem .9rem; border-radius: 999px; font-size: .85rem; font-weight: 700;
+    border: 1px solid var(--green); color: var(--green-dark); background: #fff;
+}
+.panel { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 1.5rem; }
+.panel-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; }
+.steps { list-style: none; padding: 0; margin: 0; counter-reset: step; display: flex; flex-direction: column; gap: 1rem; }
+.steps li { counter-increment: step; position: relative; padding-left: 2.75rem; display: flex; flex-direction: column; }
+.steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0; width: 32px; height: 32px; border-radius: 50%;
+    background: var(--green-soft); color: var(--green-dark); font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+}
+.steps li span { font-size: .9rem; color: var(--muted); }
+.info-card { background: var(--green-soft); border-radius: 12px; padding: 1.25rem 1.5rem; height: 100%; display: flex; flex-direction: column; gap: .25rem; }
+.info-card span { font-size: .9rem; color: #3f523f; }
+
+/* Forms */
+.auth-card {
+    max-width: 440px; margin: 1.5rem auto; background: #fff; border: 1px solid var(--line);
+    border-radius: 16px; padding: 2rem;
+}
+.page-title { font-size: 1.9rem; font-weight: 800; }
+.section-title { font-size: 1.4rem; font-weight: 700; }
+.form-control:focus, .form-select:focus, .form-check-input:focus { border-color: var(--green); box-shadow: 0 0 0 .2rem rgba(47, 125, 50, .2); }
+.form-check-input:checked { background-color: var(--green); border-color: var(--green); }
+
+/* Donor page */
+.welcome-band {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem;
+    background: var(--green-soft); border-radius: 16px; padding: 1.75rem;
+}
+.contact-box { background: var(--green-soft); border-radius: 12px; padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: .35rem; }
+
+/* Tables and status chips */
+.table-wrap { background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow-x: auto; }
+.table-wrap thead th { background: #f1f7f1; color: #3f523f; font-size: .85rem; white-space: nowrap; }
+.chip { display: inline-block; padding: .2rem .75rem; border-radius: 999px; font-size: .8rem; font-weight: 700; }
+.chip-submitted { background: #fff1cc; color: #7a5300; }
+.chip-received { background: #ddf0dd; color: var(--green-dark); }
+
+/* Admin page */
+.stat-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 1.25rem 1.5rem; }
+.stat-waiting { background: #fff8e1; border-color: #f0dda0; }
+.stat-done { background: var(--green-soft); border-color: #bcd3bc; }
+.stat-label { font-size: .9rem; font-weight: 600; color: var(--muted); }
+.stat-value { font-size: 2.2rem; font-weight: 800; }
+.nav-pills .nav-link { color: var(--ink); font-weight: 600; }
+.nav-pills .nav-link.active { background: var(--green-dark); color: #fff; }
+
+/* Webinars */
+.webinar-card { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 1.5rem; }
+.webinar-title { font-size: 1.3rem; font-weight: 700; margin-bottom: .25rem; }

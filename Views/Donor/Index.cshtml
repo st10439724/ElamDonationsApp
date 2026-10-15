@@ -1,0 +1,171 @@
+@model DonorDashboardViewModel
+@inject IOptions<NpoOptions> Npo
+@{
+    ViewData["Title"] = "My page";
+}
+
+<section class="welcome-band">
+    <div>
+        <h1 class="page-title mb-1">Welcome, @Model.FullName</h1>
+        <p class="mb-0 text-muted">Ready to give? Tap the button to donate goods or money.</p>
+    </div>
+    <button type="button" class="btn btn-brand btn-lg" data-bs-toggle="modal" data-bs-target="#donateModal">
+        Donate / Drop Off
+    </button>
+</section>
+
+<section class="mt-4">
+    <h2 class="section-title">My donations</h2>
+
+    <div class="table-wrap">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Items</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">City</th>
+                    <th scope="col">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Donations.Count == 0)
+                {
+                    <tr><td colspan="5" class="text-center text-muted py-4">No donations yet. Tap Donate / Drop Off to start.</td></tr>
+                }
+                @foreach (var d in Model.Donations)
+                {
+                    <tr>
+                        <td>@SaTime.Format(d.DateSubmitted)</td>
+                        <td>
+                            @d.ItemType
+                            @if (d.IsMoney)
+                            {
+                                <div class="small"><strong>@Rand.Format(d.Amount)</strong> &middot; Ref: <code>@d.Reference</code></div>
+                                <div class="small text-muted">Proof: @d.ProofFileName</div>
+                            }
+                        </td>
+                        <td class="text-break">@(string.IsNullOrWhiteSpace(d.Description) ? "-" : d.Description)</td>
+                        <td>@(d.IsMoney ? "-" : d.City)</td>
+                        <td><span class="chip chip-@(d.Status == DonationStatus.Received ? "received" : "submitted")">@d.Status</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <p class="small text-muted mt-2">
+        Status is set by an NPO admin. Submitted means you have told us. Received means an admin confirmed your items or payment arrived.
+        For money, the admin checks your proof of payment before marking it Received.
+    </p>
+</section>
+
+<!-- The Donate / Drop Off pop-up -->
+<div class="modal fade" id="donateModal" tabindex="-1" aria-labelledby="donateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-4" id="donateModalLabel">How to donate</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <!-- Shown for clothes and food (and until a type is chosen) -->
+                    <div class="contact-box mb-3" data-goods-only>
+                        <strong>For collection or drop off, contact the NPO</strong>
+                        <div>Instagram: <strong>@Npo.Value.InstagramHandle</strong> (send a DM)</div>
+                        <div>Phone: <strong>@(string.Join(" / ", Npo.Value.PhoneNumbers))</strong></div>
+                        <div>Email: <strong>@Npo.Value.Email</strong></div>
+                        <div>Collection in: @(string.Join(", ", DonationOptions.Cities))</div>
+                    </div>
+
+                    <!-- Shown only when "Money (EFT)" is chosen -->
+                    <div class="contact-box mb-3 d-none" data-money-only>
+                        <strong>To donate money, pay by EFT</strong>
+                        <div>Bank: <strong>@Npo.Value.Bank.BankName</strong></div>
+                        <div>Account name: <strong>@Npo.Value.Bank.AccountName</strong></div>
+                        <div>Account number: <strong>@Npo.Value.Bank.AccountNumber</strong></div>
+                        <div>Payment reference: please use your full name.</div>
+                        <div class="small">Pay first, then upload your proof of payment (a PDF) below.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="ItemType" class="form-label fw-semibold">What are you donating?</label>
+                        <select id="ItemType" name="ItemType" class="form-select" required>
+                            <option value="">Choose...</option>
+                            @foreach (var item in DonationOptions.ItemTypes)
+                            {
+                                <option value="@item">@item</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3 d-none" data-money-only>
+                        <label for="Amount" class="form-label fw-semibold">How much will you pay? (rand)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R</span>
+                            <input id="Amount" name="Amount" type="number" class="form-control" min="1" max="1000000" step="1" inputmode="numeric" />
+                        </div>
+                        <div class="form-text">Whole rand, for example 200.</div>
+                    </div>
+
+                    <div class="mb-3 d-none" data-money-only>
+                        <label for="Proof" class="form-label fw-semibold">Proof of payment (PDF)</label>
+                        <input id="Proof" name="Proof" type="file" class="form-control" accept="application/pdf,.pdf" />
+                        <div class="form-text">The PDF your bank gives you after paying. Maximum 2 MB.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Description" class="form-label fw-semibold">Describe your donation <span class="text-muted fw-normal">(optional)</span></label>
+                        <textarea id="Description" name="Description" class="form-control" rows="2" maxlength="200"
+                                  placeholder="e.g. 3 used blankets, or a new pair of soccer shoes (size 5)"></textarea>
+                        <div class="form-text">Helps the NPO know what to expect. Up to 200 characters.</div>
+                    </div>
+
+                    <div class="mb-1" data-goods-only>
+                        <label for="City" class="form-label fw-semibold">Which city?</label>
+                        <select id="City" name="City" class="form-select" required>
+                            <option value="">Choose...</option>
+                            @foreach (var city in DonationOptions.Cities)
+                            {
+                                <option value="@city">@city</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-brand">Save my donation as Submitted</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Switches the pop-up between "goods" and "money" depending on the chosen type
+        (function () {
+            var moneyValue = '@DonationOptions.Money';
+            var typeSelect = document.getElementById('ItemType');
+            var amount = document.getElementById('Amount');
+            var proof = document.getElementById('Proof');
+            var city = document.getElementById('City');
+            var moneyOnly = document.querySelectorAll('[data-money-only]');
+            var goodsOnly = document.querySelectorAll('[data-goods-only]');
+
+            function refresh() {
+                var isMoney = typeSelect.value === moneyValue;
+                moneyOnly.forEach(function (el) { el.classList.toggle('d-none', !isMoney); });
+                goodsOnly.forEach(function (el) { el.classList.toggle('d-none', isMoney); });
+                proof.required = isMoney;    
+                amount.required = isMoney;   
+                city.required = !isMoney;    
+            }
+
+            typeSelect.addEventListener('change', refresh);
+            refresh();
+        })();
+    </script>
+}

@@ -1,0 +1,134 @@
+@model AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin dashboard";
+}
+
+<h1 class="page-title mb-1">Admin dashboard</h1>
+<p class="text-muted">Click a donor name to see their donations, or Review on a donation to verify it. Only admins can see this page. Admin accounts are created by the team, never through sign up.</p>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-label">Registered donors</div>
+            <div class="stat-value">@Model.DonorCount</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card stat-waiting">
+            <div class="stat-label">Waiting to be verified</div>
+            <div class="stat-value">@Model.SubmittedCount</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card stat-done">
+            <div class="stat-label">Received</div>
+            <div class="stat-value">@Model.ReceivedCount</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card stat-done">
+            <div class="stat-label">Money received (verified)</div>
+            <div class="stat-value">@Rand.Format(Model.MoneyReceived)</div>
+        </div>
+    </div>
+</div>
+
+<ul class="nav nav-pills mb-3">
+    <li class="nav-item">
+        <a class="nav-link @(Model.Tab == "donors" ? "active" : "")" asp-action="Index" asp-route-tab="donors">Donors list</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(Model.Tab == "donations" ? "active" : "")" asp-action="Index" asp-route-tab="donations">Donations</a>
+    </li>
+</ul>
+
+@if (Model.Tab == "donors")
+{
+    <div class="table-wrap">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Contact number</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Joined</th>
+                    <th scope="col">Donations</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Donors.Count == 0)
+                {
+                    <tr><td colspan="5" class="text-center text-muted py-4">No donors have registered yet.</td></tr>
+                }
+                @foreach (var d in Model.Donors)
+                {
+                    <tr>
+                        <td class="fw-semibold"><a asp-action="Donor" asp-route-id="@d.Id">@d.FullName</a></td>
+                        <td>@d.ContactNumber</td>
+                        <td class="text-break">@d.Email</td>
+                        <td>@SaTime.Format(d.CreatedDate)</td>
+                        <td>@d.DonationCount</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <span class="fw-semibold small me-1">Filter</span>
+        @foreach (var f in new[] { "All", "Submitted", "Received" })
+        {
+            <a class="btn btn-sm @(Model.StatusFilter == f ? "btn-brand" : "btn-outline-secondary")"
+               asp-action="Index" asp-route-tab="donations" asp-route-status="@f">@f</a>
+        }
+    </div>
+
+    <div class="table-wrap">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th scope="col">Donor</th>
+                    <th scope="col">Items</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">City</th>
+                    <th scope="col">Date</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Donations.Count == 0)
+                {
+                    <tr><td colspan="7" class="text-center text-muted py-4">No donations to show.</td></tr>
+                }
+                @foreach (var d in Model.Donations)
+                {
+                    <tr>
+                        <td class="fw-semibold">@d.DonorName</td>
+                        <td>
+                            @d.ItemType
+                            @if (d.IsMoney)
+                            {
+                                <div class="small"><strong>@Rand.Format(d.Amount)</strong> &middot; Reference: <code>@d.Reference</code></div>
+                            }
+                        </td>
+                        <td class="text-break">@(string.IsNullOrWhiteSpace(d.Description) ? "-" : d.Description)</td>
+                        <td>@(d.IsMoney ? "-" : d.City)</td>
+                        <td>@SaTime.Format(d.DateSubmitted)</td>
+                        <td><span class="chip chip-@(d.Status == DonationStatus.Received ? "received" : "submitted")">@d.Status</span></td>
+                        <td>
+                            <a class="btn btn-sm @(d.Status == DonationStatus.Submitted ? "btn-brand" : "btn-outline-secondary")"
+                               asp-action="Donation" asp-route-id="@d.Id">@(d.Status == DonationStatus.Submitted ? "Review" : "View")</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <p class="small text-muted mt-2">
+        Click Review to open a donation. For clothes and food, verify once the items have arrived.
+        For money, check the proof of payment on that screen, then verify. The donor then sees Received on their page.
+    </p>
+}
