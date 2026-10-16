@@ -5,6 +5,7 @@ using ElamIgugu.Web.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -18,6 +19,8 @@ public class DonorController : Controller
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly NpoOptions _npo;
     private const int MaxProofBytes = 2 * 1024 * 1024;
+    // Hard cap on the whole upload; files between 2 MB and this still get the friendly "too big" message
+    private const int MaxRequestBytes = 5 * 1024 * 1024;
 
     public DonorController(
         ApplicationDbContext db,
@@ -51,6 +54,9 @@ public class DonorController : Controller
 
     // Posted from the pop-up: saves a new donation (goods or money) with status Submitted
     [HttpPost]
+    [EnableRateLimiting("forms")]
+    [RequestSizeLimit(MaxRequestBytes)]
+    [RequestFormLimits(MultipartBodyLengthLimit = MaxRequestBytes)]
     public async Task<IActionResult> Create(CreateDonationViewModel model)
     {
         if (!DonationOptions.ItemTypes.Contains(model.ItemType))
@@ -151,227 +157,3 @@ public class DonorController : Controller
         return RedirectToAction(nameof(Index));
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//using ElamIgugu.Web.Data;
-//using ElamIgugu.Web.Helpers;
-//using ElamIgugu.Web.Models;
-//using ElamIgugu.Web.Models.ViewModels;
-//using Microsoft.AspNetCore.Authorization;
-//using Microsoft.AspNetCore.Identity;
-//using Microsoft.AspNetCore.Mvc;
-//using Microsoft.EntityFrameworkCore;
-//using Microsoft.Extensions.Options;
-
-//namespace ElamIgugu.Web.Controllers;
-
-///// <summary>Donor-only pages. Admins are turned away automatically by the role check.</summary>
-//[Authorize(Roles = AppRoles.Donor)]
-//public class DonorController : Controller
-//{
-//    private readonly ApplicationDbContext _db;
-//    private readonly UserManager<ApplicationUser> _userManager;
-//    private readonly NpoOptions _npo;
-
-//    public DonorController(
-//        ApplicationDbContext db,
-//        UserManager<ApplicationUser> userManager,
-//        IOptions<NpoOptions> npo)
-//    {
-//        _db = db;
-//        _userManager = userManager;
-//        _npo = npo.Value;
-//    }
-
-//    // The donor page: welcome, Donate / Drop Off button, and "My donations"
-//    public async Task<IActionResult> Index()
-//    {
-//        var userId = _userManager.GetUserId(User)!;
-//        var user = await _userManager.FindByIdAsync(userId);
-
-//        // A donor can only ever see their OWN donations (filtered by DonorId)
-//        var donations = await _db.Donations
-//            .AsNoTracking()
-//            .Where(d => d.DonorId == userId)
-//            .OrderByDescending(d => d.DateSubmitted)
-//            .ToListAsync();
-
-//        return View(new DonorDashboardViewModel
-//        {
-//            FullName = user?.FullName ?? string.Empty,
-//            Donations = donations
-//        });
-//    }
-
-//    // Posted from the pop-up: saves a new donation (goods or money) with status Submitted
-//    [HttpPost]
-//    public async Task<IActionResult> Create(CreateDonationViewModel model)
-//    {
-//        if (!ModelState.IsValid || !DonationOptions.ItemTypes.Contains(model.ItemType))
-//        {
-//            TempData["Error"] = "Please choose what you are donating.";
-//            return RedirectToAction(nameof(Index));
-//        }
-
-//        var isMoney = model.ItemType == DonationOptions.Money;
-//        decimal? amount = null;
-//        string city;
-
-//        if (isMoney)
-//        {
-//            if (model.Amount is null or < 1 or > 1_000_000)
-//            {
-//                TempData["Error"] = "Please enter the amount you plan to pay, in whole rand (R1 to R1,000,000).";
-//                return RedirectToAction(nameof(Index));
-//            }
-
-//            amount = model.Amount.Value;
-//            city = "N/A";   // a bank payment has no collection city
-//        }
-//        else
-//        {
-//            if (!DonationOptions.Cities.Contains(model.City))
-//            {
-//                TempData["Error"] = "Please choose your city.";
-//                return RedirectToAction(nameof(Index));
-//            }
-
-//            city = model.City;
-//        }
-
-//        var donation = new Donation
-//        {
-//            DonorId = _userManager.GetUserId(User)!,   // taken from the sign-in, never from the form
-//            ItemType = model.ItemType,
-//            Description = string.IsNullOrWhiteSpace(model.Description) ? null : model.Description.Trim(),
-//            Amount = amount,
-//            City = city,
-//            DateSubmitted = DateTime.UtcNow,
-//            Status = DonationStatus.Submitted
-//        };
-
-//        _db.Donations.Add(donation);
-//        await _db.SaveChangesAsync();   // the Id (and so the Reference) exists after this
-
-//        if (isMoney)
-//        {
-//            var bank = _npo.Bank;
-//            TempData["Success"] =
-//                $"Saved as Submitted. Please pay {Rand.Format(amount)} by EFT to {bank.BankName}, " +
-//                $"account name {bank.AccountName}, account number {bank.AccountNumber}, " +
-//                $"using the reference {donation.Reference}. An admin marks it Received once the payment shows on the bank statement.";
-//        }
-//        else
-//        {
-//            TempData["Success"] = "Your donation is saved as Submitted. Now contact the NPO to arrange the hand-over.";
-//        }
-
-//        return RedirectToAction(nameof(Index));
-//    }
-//}

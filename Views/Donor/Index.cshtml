@@ -92,7 +92,7 @@
 
                     <div class="mb-3">
                         <label for="ItemType" class="form-label fw-semibold">What are you donating?</label>
-                        <select id="ItemType" name="ItemType" class="form-select" required>
+                        <select id="ItemType" name="ItemType" class="form-select" required data-money-value="@DonationOptions.Money">
                             <option value="">Choose...</option>
                             @foreach (var item in DonationOptions.ItemTypes)
                             {
@@ -145,28 +145,5 @@
 </div>
 
 @section Scripts {
-    <script>
-        // Switches the pop-up between "goods" and "money" depending on the chosen type
-        (function () {
-            var moneyValue = '@DonationOptions.Money';
-            var typeSelect = document.getElementById('ItemType');
-            var amount = document.getElementById('Amount');
-            var proof = document.getElementById('Proof');
-            var city = document.getElementById('City');
-            var moneyOnly = document.querySelectorAll('[data-money-only]');
-            var goodsOnly = document.querySelectorAll('[data-goods-only]');
-
-            function refresh() {
-                var isMoney = typeSelect.value === moneyValue;
-                moneyOnly.forEach(function (el) { el.classList.toggle('d-none', !isMoney); });
-                goodsOnly.forEach(function (el) { el.classList.toggle('d-none', isMoney); });
-                proof.required = isMoney;    
-                amount.required = isMoney;   
-                city.required = !isMoney;    
-            }
-
-            typeSelect.addEventListener('change', refresh);
-            refresh();
-        })();
-    </script>
+    <script src="~/js/donor.js" asp-append-version="true"></script>
 }

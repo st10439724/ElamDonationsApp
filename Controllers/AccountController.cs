@@ -3,6 +3,7 @@ using ElamIgugu.Web.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace ElamIgugu.Web.Controllers;
 
@@ -34,6 +35,7 @@ public class AccountController : Controller
     }
 
     [HttpPost]
+    [EnableRateLimiting("forms")]
     public async Task<IActionResult> Register(RegisterViewModel model)
     {
         if (!ModelState.IsValid)
@@ -58,7 +60,7 @@ public class AccountController : Controller
 
         // Self-registration ALWAYS creates a Donor. Admins are created by the team (see DbSeeder).
         await _userManager.AddToRoleAsync(user, AppRoles.Donor);
-        _logger.LogInformation("New donor registered: {Email}", model.Email);
+        _logger.LogInformation("New donor registered: {UserId}", user.Id);
 
         TempData["Success"] = "Your account has been created. Please sign in.";
         return RedirectToAction(nameof(Login));
@@ -77,6 +79,7 @@ public class AccountController : Controller
     }
 
     [HttpPost]
+    [EnableRateLimiting("forms")]
     public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
     {
         ViewData["ReturnUrl"] = returnUrl;

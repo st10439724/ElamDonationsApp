@@ -1,3 +1,4 @@
+using System.Threading.RateLimiting;
 using ElamIgugu.Web.Data;
 using ElamIgugu.Web.Models;
 using Microsoft.AspNetCore.Identity;
@@ -7,8 +8,11 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 // ---- Database (Azure SQL in production, LocalDB while developing) ----
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' was not found.");
+// Comes from user-secrets locally and from the App Service connection string in Azure, never from appsettings.json
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(connectionString))
+    throw new InvalidOperationException(
+        "Connection string 'DefaultConnection' is not set. Use 'dotnet user-secrets set ConnectionStrings:DefaultConnection ...' (see README).");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
@@ -51,6 +55,16 @@ builder.Services.Configure<NpoOptions>(builder.Configuration.GetSection("Npo"));
 // Every POST form must carry an anti-forgery token (protects against CSRF)
 builder.Services.AddControllersWithViews(options =>
     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()));
+builder.Services.AddAntiforgery(options => options.Cookie.SecurePolicy = CookieSecurePolicy.Always);
+
+// Slows down password guessing and spam on the public forms: 20 posts per minute per IP address
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("forms", http => RateLimitPartition.GetFixedWindowLimiter(
+        http.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(1) }));
+});
 
 var app = builder.Build();
 
@@ -66,9 +80,38 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+app.Use(async (context, next) =>
+{
+    context.Response.OnStarting(() =>
+    {
+        var headers = context.Response.Headers;
+        headers.XContentTypeOptions = "nosniff";
+        headers.XFrameOptions = "DENY";
+        headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+        headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
+
+        // Browsers' built-in PDF viewers break under a CSP, so the proof-of-payment PDF is left out
+        if (context.Response.ContentType?.StartsWith("application/pdf") != true)
+        {
+            headers.ContentSecurityPolicy =
+                "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://cdn.jsdelivr.net; " +
+                "img-src 'self' data:; font-src 'self' https://cdn.jsdelivr.net; object-src 'none'; base-uri 'self'; " +
+                "form-action 'self'; frame-ancestors 'none'";
+        }
+
+        // Pages with personal data must not be kept in the browser or proxy caches
+        if (context.User.Identity?.IsAuthenticated == true)
+            headers.CacheControl = "no-store";
+
+        return Task.CompletedTask;
+    });
+    await next();
+});
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+app.UseRateLimiter();
 
 app.UseAuthentication();   // who are you?
 app.UseAuthorization();    // are you allowed in?

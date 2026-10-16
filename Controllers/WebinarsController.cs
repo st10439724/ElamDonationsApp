@@ -2,6 +2,7 @@ using ElamIgugu.Web.Data;
 using ElamIgugu.Web.Models;
 using ElamIgugu.Web.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 namespace ElamIgugu.Web.Controllers;
@@ -28,6 +29,7 @@ public class WebinarsController : Controller
     }
 
     [HttpPost]
+    [EnableRateLimiting("forms")]
     public async Task<IActionResult> Rsvp(RsvpViewModel model)
     {
         if (!ModelState.IsValid)
