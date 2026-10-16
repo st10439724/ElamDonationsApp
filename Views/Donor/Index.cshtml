@@ -7,7 +7,7 @@
 <section class="welcome-band">
     <div>
         <h1 class="page-title mb-1">Welcome, @Model.FullName</h1>
-        <p class="mb-0 text-muted">Ready to give? Tap the button to donate goods or money.</p>
+        <p class="mb-0 text-muted">For donations, Tap the button to donate goods or money.</p>
     </div>
     <button type="button" class="btn btn-brand btn-lg" data-bs-toggle="modal" data-bs-target="#donateModal">
         Donate / Drop Off
@@ -76,6 +76,7 @@
                         <div>Instagram: <strong>@Npo.Value.InstagramHandle</strong> (send a DM)</div>
                         <div>Phone: <strong>@(string.Join(" / ", Npo.Value.PhoneNumbers))</strong></div>
                         <div>Email: <strong>@Npo.Value.Email</strong></div>
+                        <div>Drop-off address: <strong>@Npo.Value.DropOffAddress</strong></div>
                         <div>Collection in: @(string.Join(", ", DonationOptions.Cities))</div>
                     </div>
 

@@ -42,6 +42,6 @@
 
 <section class="row g-3 pb-4">
     <div class="col-md-4"><div class="info-card"><strong>What we collect</strong><span>Clothes, non-perishable food and money (EFT).</span></div></div>
-    <div class="col-md-4"><div class="info-card"><strong>Where</strong><span>@(string.Join(", ", DonationOptions.Cities))</span></div></div>
+    <div class="col-md-4"><div class="info-card"><strong>Where</strong><span>Drop-off: @Npo.Value.DropOffAddress</span><span>Collection in @(string.Join(", ", DonationOptions.Cities))</span></div></div>
     <div class="col-md-4"><div class="info-card"><strong>Contact</strong><span>@Npo.Value.InstagramHandle, @(string.Join(" / ", Npo.Value.PhoneNumbers))</span><span>@Npo.Value.Email</span></div></div>
 </section>
